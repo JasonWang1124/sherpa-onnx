@@ -17,14 +17,22 @@
 
 namespace sherpa_onnx {
 
-// 添加語言識別結果結構體
+// 語言識別結果結構體 - 包含所有語言的機率分佈
 struct LanguageDetectionResult {
-  int32_t language_id;
-  float confidence;
-  std::string language_code;
+  int32_t top_language_id;              // 最高機率的語言 ID
+  float top_confidence;                 // 最高機率的信心度
+  std::string top_language_code;        // 最高機率的語言代碼
   
-  LanguageDetectionResult(int32_t id, float conf, const std::string& code)
-    : language_id(id), confidence(conf), language_code(code) {}
+  std::vector<int32_t> all_language_ids;     // 所有語言的 ID 列表
+  std::vector<float> all_confidences;        // 所有語言的機率列表 (對應 language_ids)
+  std::vector<std::string> all_language_codes; // 所有語言的代碼列表
+  
+  LanguageDetectionResult(int32_t top_id, float top_conf, const std::string& top_code,
+                         std::vector<int32_t> ids, std::vector<float> confs, 
+                         std::vector<std::string> codes)
+    : top_language_id(top_id), top_confidence(top_conf), top_language_code(top_code),
+      all_language_ids(std::move(ids)), all_confidences(std::move(confs)), 
+      all_language_codes(std::move(codes)) {}
 };
 
 class OfflineWhisperModel {

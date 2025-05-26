@@ -178,43 +178,123 @@ class OfflineWhisperModel::Impl {
     return lang_id;
   }
 
-  // 新的帶信心度的語言識別方法實現
+  // 新的帶信心度的語言識別方法實現 - 返回所有語言的機率分佈
   LanguageDetectionResult DetectLanguageWithConfidence(
       Ort::Value &cross_k, Ort::Value &cross_v) {
-    // 重用原有的邏輯
-    Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
-        Allocator(), sot_sequence_.data(), sot_sequence_.size(),
-        std::array<int64_t, 2>{1, static_cast<int64_t>(sot_sequence_.size())}.data(), 2);
+    int64_t token_val = SOT();
+    std::array<int64_t, 2> token_shape{1, 1};
 
-    auto decoder_out = decoder_sess_->Run(
-        {}, decoder_input_names_ptr_.data(),
-        std::array<Ort::Value *, 2>{&tokens, &cross_k}.data(), 2,
-        decoder_output_names_ptr_.data(), 1);
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    Ort::Value tokens = Ort::Value::CreateTensor(
+        memory_info, &token_val, 1, token_shape.data(), token_shape.size());
+
+    auto self_kv_cache = GetInitialSelfKVCache();
+
+    std::array<int64_t, 1> offset_shape{1};
+    Ort::Value offset = Ort::Value::CreateTensor<int64_t>(
+        Allocator(), offset_shape.data(), offset_shape.size());
+    *(offset.GetTensorMutableData<int64_t>()) = 0;
+
+    auto decoder_out =
+        ForwardDecoder(std::move(tokens), std::move(self_kv_cache.first),
+                       std::move(self_kv_cache.second), std::move(cross_k),
+                       std::move(cross_v), std::move(offset));
+
+    cross_k = std::move(std::get<3>(decoder_out));
+    cross_v = std::move(std::get<4>(decoder_out));
 
     const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
     const auto &all_language_ids = GetAllLanguageIDs();
+    const auto &id2lang = GetID2Lang();
 
-    int32_t lang_id = all_language_ids[0];
-    float this_logit = p_logits[lang_id];
+    // 找到最高 logit 的語言 (用於確定頂級預測)
+    int32_t top_lang_id = all_language_ids[0];
+    float max_logit = p_logits[top_lang_id];
 
     for (int32_t i = 1; i != all_language_ids.size(); ++i) {
       int32_t id = all_language_ids[i];
-      float p = p_logits[id];
+      float logit = p_logits[id];
 
-      if (p > this_logit) {
-        this_logit = p;
-        lang_id = id;
+      if (logit > max_logit) {
+        max_logit = logit;
+        top_lang_id = id;
       }
     }
 
-    std::string language_code = GetID2Lang().at(lang_id);
+    // 計算所有語言的 softmax 機率
+    // 使用數值穩定的 softmax: exp(x_i - max_x) / sum(exp(x_j - max_x))
+    float sum_exp = 0.0f;
+    std::vector<float> exp_logits(all_language_ids.size());
     
-    if (config_.debug) {
-      SHERPA_ONNX_LOGE("Detected language: %s, confidence: %f",
-                       language_code.c_str(), this_logit);
+    for (int32_t i = 0; i != all_language_ids.size(); ++i) {
+      int32_t id = all_language_ids[i];
+      float logit = p_logits[id];
+      exp_logits[i] = std::exp(logit - max_logit);
+      sum_exp += exp_logits[i];
     }
 
-    return LanguageDetectionResult(lang_id, this_logit, language_code);
+    // 準備返回的資料結構
+    std::vector<int32_t> ids;
+    std::vector<float> probabilities;
+    std::vector<std::string> codes;
+    
+    ids.reserve(all_language_ids.size());
+    probabilities.reserve(all_language_ids.size());
+    codes.reserve(all_language_ids.size());
+
+    float top_probability = 0.0f;
+    std::string top_language_code;
+
+    // 計算每種語言的機率並填入結果
+    for (int32_t i = 0; i != all_language_ids.size(); ++i) {
+      int32_t id = all_language_ids[i];
+      float probability = exp_logits[i] / sum_exp;
+      
+      // 確保機率在有效範圍內
+      probability = std::max(0.0f, std::min(1.0f, probability));
+      
+      ids.push_back(id);
+      probabilities.push_back(probability);
+      
+      std::string language_code;
+      if (id2lang.count(id)) {
+        language_code = id2lang.at(id);
+      } else {
+        SHERPA_ONNX_LOGE("Unknown language ID: %d. Using empty string.", id);
+        language_code = "";
+      }
+      codes.push_back(language_code);
+      
+      // 記錄頂級預測的資訊
+      if (id == top_lang_id) {
+        top_probability = probability;
+        top_language_code = language_code;
+      }
+    }
+    
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Top detected language: %s, probability: %f (original logit: %f)",
+                       top_language_code.c_str(), top_probability, max_logit);
+      
+      // 輸出所有語言的機率 (僅前5名)
+      std::vector<std::pair<float, std::string>> sorted_results;
+      for (size_t i = 0; i < probabilities.size(); ++i) {
+        sorted_results.emplace_back(probabilities[i], codes[i]);
+      }
+      std::sort(sorted_results.rbegin(), sorted_results.rend());
+      
+      SHERPA_ONNX_LOGE("Top 5 language predictions:");
+      for (int i = 0; i < std::min(5, static_cast<int>(sorted_results.size())); ++i) {
+        SHERPA_ONNX_LOGE("  %d. %s: %.3f", i+1, sorted_results[i].second.c_str(), 
+                         sorted_results[i].first);
+      }
+    }
+
+    return LanguageDetectionResult(top_lang_id, top_probability, top_language_code,
+                                   std::move(ids), std::move(probabilities), 
+                                   std::move(codes));
   }
 
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache() {

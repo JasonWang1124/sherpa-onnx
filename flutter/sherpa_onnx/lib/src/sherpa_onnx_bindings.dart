@@ -585,11 +585,19 @@ final class SherpaOnnxSpokenLanguageIdentificationConfig extends Struct {
 }
 
 final class SherpaOnnxSpokenLanguageIdentificationResult extends Struct {
+  // 頂級預測的語言代碼 (向後相容)
   external Pointer<Utf8> lang;
-  
-  // 信心度分數 (logit值，範圍通常在 -10 到 10 之間)
+
+  // 頂級預測的信心度 (0-1 之間的機率值)
   @Float()
   external double confidence;
+
+  // 所有語言的完整機率分佈
+  external Pointer<Pointer<Utf8>> allLangCodes; // 所有語言代碼陣列，以 NULL 結尾
+  external Pointer<Float> allConfidences; // 所有語言的機率值陣列 (0-1 之間)
+
+  @Int32()
+  external int numLanguages; // 語言總數
 }
 
 typedef SherpaOnnxCreateOfflineSpeechDenoiserNative

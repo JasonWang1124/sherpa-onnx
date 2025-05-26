@@ -1474,14 +1474,36 @@ SherpaOnnxSpokenLanguageIdentificationCompute(
     const SherpaOnnxSpokenLanguageIdentification *slid,
     const SherpaOnnxOfflineStream *s) {
   auto result = slid->impl->ComputeWithConfidence(s->impl.get());
-  char *c_lang = new char[result.language_code.size() + 1];
-  std::copy(result.language_code.begin(), result.language_code.end(), c_lang);
-  c_lang[result.language_code.size()] = '\0';
+  
+  // 為頂級預測分配記憶體 (向後相容)
+  char *c_lang = new char[result.top_language_code.size() + 1];
+  std::copy(result.top_language_code.begin(), result.top_language_code.end(), c_lang);
+  c_lang[result.top_language_code.size()] = '\0';
+  
+  // 為所有語言代碼分配記憶體
+  char **all_lang_codes = new char*[result.all_language_codes.size() + 1];
+  for (size_t i = 0; i < result.all_language_codes.size(); ++i) {
+    const std::string& code = result.all_language_codes[i];
+    all_lang_codes[i] = new char[code.size() + 1];
+    std::copy(code.begin(), code.end(), all_lang_codes[i]);
+    all_lang_codes[i][code.size()] = '\0';
+  }
+  all_lang_codes[result.all_language_codes.size()] = nullptr; // NULL 結尾
+  
+  // 為所有機率值分配記憶體
+  float *all_confidences = new float[result.all_confidences.size()];
+  std::copy(result.all_confidences.begin(), result.all_confidences.end(), all_confidences);
   
   SherpaOnnxSpokenLanguageIdentificationResult *r =
       new SherpaOnnxSpokenLanguageIdentificationResult;
+  memset(r, 0, sizeof(SherpaOnnxSpokenLanguageIdentificationResult));
+  
   r->lang = c_lang;
-  r->confidence = result.confidence;
+  r->confidence = result.top_confidence;
+  r->all_lang_codes = const_cast<const char**>(all_lang_codes);
+  r->all_confidences = all_confidences;
+  r->num_languages = static_cast<int32_t>(result.all_language_codes.size());
+  
   return r;
 }
 
@@ -1489,6 +1511,18 @@ void SherpaOnnxDestroySpokenLanguageIdentificationResult(
     const SherpaOnnxSpokenLanguageIdentificationResult *r) {
   if (r) {
     delete[] r->lang;
+    
+    // 釋放所有語言代碼陣列
+    if (r->all_lang_codes) {
+      for (int32_t i = 0; i < r->num_languages; ++i) {
+        delete[] r->all_lang_codes[i];
+      }
+      delete[] r->all_lang_codes;
+    }
+    
+    // 釋放所有機率值陣列
+    delete[] r->all_confidences;
+    
     delete r;
   }
 }

@@ -1137,15 +1137,17 @@ SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(
     const SherpaOnnxSpokenLanguageIdentification *slid);
 
 SHERPA_ONNX_API typedef struct SherpaOnnxSpokenLanguageIdentificationResult {
-  // en for English
-  // de for German
-  // zh for Chinese
-  // es for Spanish
-  // ...
+  // 頂級預測的語言代碼 (向後相容)
+  // en for English, de for German, zh for Chinese, es for Spanish, ...
   const char *lang;
   
-  // 信心度分數 (logit值，範圍通常在 -10 到 10 之間)
+  // 頂級預測的信心度 (0-1 之間的機率值)
   float confidence;
+  
+  // 所有語言的完整機率分佈
+  const char **all_lang_codes;    // 所有語言代碼陣列，以 NULL 結尾
+  const float *all_confidences;   // 所有語言的機率值陣列 (0-1 之間)
+  int32_t num_languages;          // 語言總數
 } SherpaOnnxSpokenLanguageIdentificationResult;
 
 // The user has to invoke SherpaOnnxDestroySpokenLanguageIdentificationResult()

@@ -58,7 +58,7 @@ void main() async {
     print('   樣本數: ${waveData.samples.length}');
     print(
         '   時長: ${(waveData.samples.length / waveData.sampleRate).toStringAsFixed(2)} 秒');
-    print();
+    print('');
 
     // 創建離線串流
     final stream = slid.createStream();
@@ -73,38 +73,38 @@ void main() async {
 
     print('\n✅ 語言識別完成！');
     print('🌍 檢測到的語言: ${result.language}');
-    print('📊 信心度分數: ${result.confidence.toStringAsFixed(3)}');
+    print('📊 信心度機率: ${(result.confidence * 100).toStringAsFixed(1)}%');
 
-    // 解釋信心度分數
+    // 解釋信心度分數 (現在是 0-1 之間的機率)
     String confidenceLevel;
     String confidenceEmoji;
     String confidenceDesc;
 
-    if (result.confidence > 5.0) {
+    if (result.confidence >= 0.9) {
       confidenceLevel = '非常高';
       confidenceEmoji = '🟢';
-      confidenceDesc = '模型對此預測非常有信心';
-    } else if (result.confidence > 2.0) {
+      confidenceDesc = '模型對此預測非常有信心 (90%+)';
+    } else if (result.confidence >= 0.7) {
       confidenceLevel = '高';
       confidenceEmoji = '🟡';
-      confidenceDesc = '模型對此預測有較高信心';
-    } else if (result.confidence > 0.0) {
+      confidenceDesc = '模型對此預測有較高信心 (70-89%)';
+    } else if (result.confidence >= 0.5) {
       confidenceLevel = '中等';
       confidenceEmoji = '🟠';
-      confidenceDesc = '模型對此預測有中等信心';
-    } else if (result.confidence > -2.0) {
+      confidenceDesc = '模型對此預測有中等信心 (50-69%)';
+    } else if (result.confidence >= 0.3) {
       confidenceLevel = '低';
       confidenceEmoji = '🔴';
-      confidenceDesc = '模型對此預測信心較低';
+      confidenceDesc = '模型對此預測信心較低 (30-49%)';
     } else {
       confidenceLevel = '非常低';
       confidenceEmoji = '🚫';
-      confidenceDesc = '模型對此預測幾乎沒有信心，可能是噪音或未知語言';
+      confidenceDesc = '模型對此預測幾乎沒有信心 (<30%)，可能是噪音或未知語言';
     }
 
     print('🎯 信心度等級: $confidenceLevel $confidenceEmoji');
     print('💡 說明: $confidenceDesc');
-    print();
+    print('');
 
     // 印出常見語言代碼說明
     final commonLanguages = {
@@ -139,9 +139,9 @@ void main() async {
 
     // 根據信心度給出建議
     print('\n💡 建議:');
-    if (result.confidence > 2.0) {
+    if (result.confidence >= 0.7) {
       print('   ✅ 識別結果可靠，可以信任此預測');
-    } else if (result.confidence > 0.0) {
+    } else if (result.confidence >= 0.5) {
       print('   ⚠️  識別結果尚可，建議與其他證據結合判斷');
     } else {
       print('   ❌ 識別結果不太可靠，建議:');
@@ -181,9 +181,9 @@ void main() async {
 
 ✅ 語言識別完成！
 🌍 檢測到的語言: en
-📊 信心度分數: 6.234
+📊 信心度機率: 92.4%
 🎯 信心度等級: 非常高 🟢
-💡 說明: 模型對此預測非常有信心
+💡 說明: 模型對此預測非常有信心 (90%+)
 
 📝 語言說明: 英語 (English)
 
