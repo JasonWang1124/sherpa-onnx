@@ -1473,13 +1473,15 @@ const SherpaOnnxSpokenLanguageIdentificationResult *
 SherpaOnnxSpokenLanguageIdentificationCompute(
     const SherpaOnnxSpokenLanguageIdentification *slid,
     const SherpaOnnxOfflineStream *s) {
-  std::string lang = slid->impl->Compute(s->impl.get());
-  char *c_lang = new char[lang.size() + 1];
-  std::copy(lang.begin(), lang.end(), c_lang);
-  c_lang[lang.size()] = '\0';
+  auto result = slid->impl->ComputeWithConfidence(s->impl.get());
+  char *c_lang = new char[result.language_code.size() + 1];
+  std::copy(result.language_code.begin(), result.language_code.end(), c_lang);
+  c_lang[result.language_code.size()] = '\0';
+  
   SherpaOnnxSpokenLanguageIdentificationResult *r =
       new SherpaOnnxSpokenLanguageIdentificationResult;
   r->lang = c_lang;
+  r->confidence = result.confidence;
   return r;
 }
 

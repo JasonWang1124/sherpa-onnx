@@ -90,6 +90,9 @@ class SpokenLanguageIdentification {
   // Note: en is for English, zh is for Chinese, de is for German, etc.
   std::string Compute(OfflineStream *s) const;
 
+  // Return language detection result with confidence score
+  LanguageDetectionResult ComputeWithConfidence(OfflineStream *s) const;
+
  private:
   std::unique_ptr<SpokenLanguageIdentificationImpl> impl_;
 };

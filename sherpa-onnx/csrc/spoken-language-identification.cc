@@ -127,4 +127,8 @@ std::string SpokenLanguageIdentification::Compute(OfflineStream *s) const {
   return impl_->Compute(s);
 }
 
+LanguageDetectionResult SpokenLanguageIdentification::ComputeWithConfidence(OfflineStream *s) const {
+  return impl_->ComputeWithConfidence(s);
+}
+
 }  // namespace sherpa_onnx

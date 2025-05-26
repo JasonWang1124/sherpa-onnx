@@ -1,0 +1,107 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "characters",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/characters-1.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "collection",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/collection-1.19.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "ffi",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/ffi-2.1.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "flutter",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/flutter/packages/flutter",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "lints",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/lints-3.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "material_color_utilities",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/material_color_utilities-0.11.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
+      "name": "meta",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.15.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "sherpa_onnx",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/git/sherpa-onnx-db62b4cc5a4655d679e76738e7efd8443a934504/flutter/sherpa_onnx",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "sherpa_onnx_android",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/sherpa_onnx_android-1.12.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "sherpa_onnx_ios",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/sherpa_onnx_ios-1.12.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "sherpa_onnx_linux",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/sherpa_onnx_linux-1.12.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "sherpa_onnx_macos",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/sherpa_onnx_macos-1.12.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "sherpa_onnx_windows",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/sherpa_onnx_windows-1.12.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "sky_engine",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/flutter/bin/cache/pkg/sky_engine",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "vector_math",
+      "rootUri": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.1.4",
+      "packageUri": "lib/",
+      "languageVersion": "2.14"
+    },
+    {
+      "name": "spoken_language_identification_example",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    }
+  ],
+  "generated": "2025-05-26T07:29:34.068495Z",
+  "generator": "pub",
+  "generatorVersion": "3.6.2",
+  "flutterRoot": "file:///C:/Users/JasonWang/AppData/Local/flutter",
+  "flutterVersion": "3.27.4",
+  "pubCache": "file:///C:/Users/JasonWang/AppData/Local/Pub/Cache"
+}

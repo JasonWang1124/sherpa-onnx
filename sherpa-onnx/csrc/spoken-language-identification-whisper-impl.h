@@ -45,6 +45,11 @@ class SpokenLanguageIdentificationWhisperImpl
   }
 
   std::string Compute(OfflineStream *s) const override {
+    auto result = ComputeWithConfidence(s);
+    return result.language_code;
+  }
+
+  LanguageDetectionResult ComputeWithConfidence(OfflineStream *s) const override {
     int32_t max_num_frames = 3000;
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -92,15 +97,8 @@ class SpokenLanguageIdentificationWhisperImpl
 
     try {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
-      int32_t lang_id = model_->DetectLanguage(cross_kv.first, cross_kv.second);
-      const auto &id2lang = model_->GetID2Lang();
-      if (id2lang.count(lang_id)) {
-        return id2lang.at(lang_id);
-      } else {
-        SHERPA_ONNX_LOGE("Unknown language ID: %d. Return an empty string.",
-                         lang_id);
-        return "";
-      }
+      auto result = model_->DetectLanguageWithConfidence(cross_kv.first, cross_kv.second);
+      return result;
     } catch (const Ort::Exception &ex) {
       SHERPA_ONNX_LOGE(
           "\n\nCaught exception:\n\n%s\n\nReturn an empty result. Number of "
@@ -108,7 +106,7 @@ class SpokenLanguageIdentificationWhisperImpl
           "paddings: %d. If you see a lot of such exceptions, please consider "
           "using a larger --whisper-tail-paddings",
           ex.what(), num_frames, tail_padding_frames);
-      return "";
+      return LanguageDetectionResult(-1, 0.0f, "");
     }
   }
 

@@ -78,14 +78,16 @@ class SpokenLanguageIdentificationConfig {
 class SpokenLanguageIdentificationResult {
   const SpokenLanguageIdentificationResult({
     required this.language,
+    required this.confidence,
   });
 
   @override
   String toString() {
-    return 'SpokenLanguageIdentificationResult(language: $language)';
+    return 'SpokenLanguageIdentificationResult(language: $language, confidence: $confidence)';
   }
 
   final String language;
+  final double confidence;
 }
 
 class SpokenLanguageIdentification {
@@ -148,16 +150,21 @@ class SpokenLanguageIdentification {
         nullptr;
 
     if (resultPtr == nullptr) {
-      return const SpokenLanguageIdentificationResult(language: 'unknown');
+      return const SpokenLanguageIdentificationResult(
+          language: 'unknown', confidence: 0.0);
     }
 
     final langPtr = resultPtr.ref.lang;
     final language = langPtr.toDartString();
+    final confidence = resultPtr.ref.confidence;
 
     SherpaOnnxBindings.destroySpokenLanguageIdentificationResult
         ?.call(resultPtr);
 
-    return SpokenLanguageIdentificationResult(language: language);
+    return SpokenLanguageIdentificationResult(
+      language: language,
+      confidence: confidence,
+    );
   }
 
   Pointer<SherpaOnnxSpokenLanguageIdentification> ptr;

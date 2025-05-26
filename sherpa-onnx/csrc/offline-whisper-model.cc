@@ -171,11 +171,50 @@ class OfflineWhisperModel::Impl {
     }
 
     if (config_.debug) {
-      SHERPA_ONNX_LOGE("Detected language: %s",
-                       GetID2Lang().at(lang_id).c_str());
+      SHERPA_ONNX_LOGE("Detected language: %s, confidence: %f",
+                       GetID2Lang().at(lang_id).c_str(), this_logit);
     }
 
     return lang_id;
+  }
+
+  // 新的帶信心度的語言識別方法實現
+  LanguageDetectionResult DetectLanguageWithConfidence(
+      Ort::Value &cross_k, Ort::Value &cross_v) {
+    // 重用原有的邏輯
+    Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
+        Allocator(), sot_sequence_.data(), sot_sequence_.size(),
+        std::array<int64_t, 2>{1, static_cast<int64_t>(sot_sequence_.size())}.data(), 2);
+
+    auto decoder_out = decoder_sess_->Run(
+        {}, decoder_input_names_ptr_.data(),
+        std::array<Ort::Value *, 2>{&tokens, &cross_k}.data(), 2,
+        decoder_output_names_ptr_.data(), 1);
+
+    const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
+    const auto &all_language_ids = GetAllLanguageIDs();
+
+    int32_t lang_id = all_language_ids[0];
+    float this_logit = p_logits[lang_id];
+
+    for (int32_t i = 1; i != all_language_ids.size(); ++i) {
+      int32_t id = all_language_ids[i];
+      float p = p_logits[id];
+
+      if (p > this_logit) {
+        this_logit = p;
+        lang_id = id;
+      }
+    }
+
+    std::string language_code = GetID2Lang().at(lang_id);
+    
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("Detected language: %s, confidence: %f",
+                       language_code.c_str(), this_logit);
+    }
+
+    return LanguageDetectionResult(lang_id, this_logit, language_code);
   }
 
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache() {
@@ -386,6 +425,11 @@ OfflineWhisperModel::ForwardDecoder(Ort::Value tokens,
 int32_t OfflineWhisperModel::DetectLanguage(Ort::Value &cross_k,    // NOLINT
                                             Ort::Value &cross_v) {  // NOLINT
   return impl_->DetectLanguage(cross_k, cross_v);
+}
+
+LanguageDetectionResult OfflineWhisperModel::DetectLanguageWithConfidence(
+    Ort::Value &cross_k, Ort::Value &cross_v) {  // NOLINT
+  return impl_->DetectLanguageWithConfidence(cross_k, cross_v);
 }
 
 std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::GetInitialSelfKVCache()

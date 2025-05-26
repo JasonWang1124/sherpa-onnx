@@ -1143,6 +1143,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxSpokenLanguageIdentificationResult {
   // es for Spanish
   // ...
   const char *lang;
+  
+  // 信心度分數 (logit值，範圍通常在 -10 到 10 之間)
+  float confidence;
 } SherpaOnnxSpokenLanguageIdentificationResult;
 
 // The user has to invoke SherpaOnnxDestroySpokenLanguageIdentificationResult()

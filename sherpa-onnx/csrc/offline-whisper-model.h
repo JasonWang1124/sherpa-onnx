@@ -17,6 +17,16 @@
 
 namespace sherpa_onnx {
 
+// 添加語言識別結果結構體
+struct LanguageDetectionResult {
+  int32_t language_id;
+  float confidence;
+  std::string language_code;
+  
+  LanguageDetectionResult(int32_t id, float conf, const std::string& code)
+    : language_id(id), confidence(conf), language_code(code) {}
+};
+
 class OfflineWhisperModel {
  public:
   explicit OfflineWhisperModel(const OfflineModelConfig &config);
@@ -76,6 +86,10 @@ class OfflineWhisperModel {
 
   int32_t DetectLanguage(Ort::Value &cross_k,   // NOLINT
                          Ort::Value &cross_v);  // NOLINT
+
+  // 新的帶信心度的語言識別方法
+  LanguageDetectionResult DetectLanguageWithConfidence(Ort::Value &cross_k,   // NOLINT
+                                                       Ort::Value &cross_v);  // NOLINT
 
   /** Return the initial self kv cache in a pair
    *  - n_layer_self_k_cache A 4-D tensor of shape

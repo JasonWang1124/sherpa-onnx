@@ -1,0 +1,16 @@
+name: spoken_language_identification_example
+description: 語言識別 (Spoken Language Identification) 使用範例
+version: 1.0.0
+
+environment:
+  sdk: ">=3.1.0 <4.0.0"
+
+dependencies:
+  sherpa_onnx:
+    git:
+      url: https://git.thebarkingdog.tw/JasonWang/sherpa-onnx.git
+      ref: db62b4cc5a4655d679e76738e7efd8443a934504
+      path: flutter/sherpa_onnx
+
+dev_dependencies:
+  lints: ^3.0.0 
